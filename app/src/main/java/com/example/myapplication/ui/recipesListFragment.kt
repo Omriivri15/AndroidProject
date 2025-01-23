@@ -1,10 +1,13 @@
 package com.example.myapplication.ui
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
@@ -20,7 +23,6 @@ class RecipesListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_recipes_list, container, false)
 
         // Fetch recipes from the model
@@ -34,6 +36,18 @@ class RecipesListFragment : Fragment() {
         // Set up the adapter
         val adapter = RecipeAdapter(recipes)
         recyclerView.adapter = adapter
+
+        // Set up Toolbar
+        val toolbar: Toolbar = view.findViewById(R.id.toolbar_recipes_list)
+        (activity as AppCompatActivity).setSupportActionBar(toolbar)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        (activity as AppCompatActivity).supportActionBar?.title = "ReciAppes"
+
+        // Add profile icon as a separate ImageView
+        val profileIcon: ImageView = view.findViewById(R.id.profile_icon)
+        profileIcon.setOnClickListener {
+            // Open profile activity or fragment
+        }
 
         return view
     }
