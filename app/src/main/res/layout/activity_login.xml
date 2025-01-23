@@ -12,6 +12,7 @@
         android:gravity="center"
         android:padding="16dp">
 
+
         <!-- Login View -->
         <LinearLayout
             android:id="@+id/loginView"

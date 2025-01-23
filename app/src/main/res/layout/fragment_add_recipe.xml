@@ -1,13 +1,32 @@
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical">
 
+    <!-- Toolbar with back button and white text -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@android:color/white"
+        app:title="Add Recipe"
+        app:titleTextColor="@android:color/white"
+        app:contentInsetStartWithNavigation="0dp"/>
+
+    <!-- Rest of the layout remains the same -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp">
 
         <TextView
             android:id="@+id/title_text_view"
@@ -23,47 +42,47 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Recipe Title"
-            android:inputType="text"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Ingredients"
             android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/ingredients_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Steps"
             android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/steps_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"/>
 
         <Button
             android:id="@+id/upload_photo_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Upload Photo"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"/>
 
         <Button
             android:id="@+id/save_recipe_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save Recipe" />
+            android:text="Save Recipe"/>
 
     </LinearLayout>
-</ScrollView>
+
+</LinearLayout>
