@@ -47,11 +47,19 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    implementation ("androidx.activity:activity-ktx:1.7.2") // Use the latest version
+    implementation ("androidx.fragment:fragment-ktx:1.5.7") // Required for fragments
+
     // Firebase platform for managing versions
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+
+    implementation("com.google.firebase:firebase-storage-ktx")
+
 
     // Firebase services
     implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
     implementation("com.google.firebase:firebase-database-ktx") // Firebase Realtime Database (optional)
     implementation("com.google.firebase:firebase-firestore-ktx") // Firestore (optional)
+
+    implementation ("com.squareup.picasso:picasso:2.71828")
 }
