@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.LoginActivity
+import com.example.myapplication.MainActivity
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
@@ -65,7 +66,7 @@ class RecipesListFragment : Fragment() {
         popupMenu.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_profile -> {
-                    // Navigate to Profile
+                    // Navigate to ProfileFragment
                     navigateToProfile()
                     true
                 }
@@ -81,15 +82,16 @@ class RecipesListFragment : Fragment() {
     }
 
     private fun navigateToProfile() {
-
+        // Use MainActivity's displayFragment to navigate
+        (activity as? MainActivity)?.displayFragment(ProfileFragment())
     }
 
     private fun logoutUser() {
-        // בצע לוגאוט דרך Firebase
+        // Logout via Firebase
         FirebaseAuth.getInstance().signOut()
 
         val intent = Intent(requireContext(), LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // מנקה את ה-back stack
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
         startActivity(intent)
         requireActivity().finish()
     }
