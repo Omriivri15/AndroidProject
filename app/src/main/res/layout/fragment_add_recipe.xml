@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <!-- Toolbar with back button and white text -->
     <androidx.appcompat.widget.Toolbar
@@ -16,9 +15,16 @@
         app:navigationIconTint="@android:color/white"
         app:title="Add Recipe"
         app:titleTextColor="@android:color/white"
-        app:contentInsetStartWithNavigation="0dp"/>
+        app:contentInsetStartWithNavigation="0dp"
+        android:layout_gravity="top" />
 
-    <!-- Rest of the layout remains the same -->
+    <!-- ScrollView to allow scrolling of content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="16dp"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,6 +34,7 @@
         android:paddingTop="32dp"
         android:paddingBottom="32dp">
 
+        <!-- Recipe Title -->
         <TextView
             android:id="@+id/title_text_view"
             android:layout_width="wrap_content"
@@ -37,6 +44,7 @@
             android:layout_gravity="center"
             android:paddingBottom="16dp" />
 
+        <!-- Recipe Title Input -->
         <EditText
             android:id="@+id/recipe_title_input"
             android:layout_width="match_parent"
@@ -44,6 +52,7 @@
             android:hint="Recipe Title"
             android:layout_marginBottom="16dp"/>
 
+        <!-- Ingredients Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -57,6 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"/>
 
+        <!-- Steps Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,13 +80,18 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"/>
 
-        <Button
-            android:id="@+id/upload_photo_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Upload Photo"
-            android:layout_marginBottom="16dp"/>
+        <!-- ImageView for displaying selected or captured photo, clickable -->
+        <ImageView
+            android:id="@+id/photo_image_view"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="Recipe photo"
+            android:src="@drawable/ic_placeholder_image"
+            android:clickable="true"
+            android:focusable="true"/>
 
+        <!-- Save Recipe Button -->
         <Button
             android:id="@+id/save_recipe_button"
             android:layout_width="wrap_content"
@@ -85,4 +100,5 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>
+
