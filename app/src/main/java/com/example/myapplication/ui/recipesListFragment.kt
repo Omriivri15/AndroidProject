@@ -1,5 +1,3 @@
-package com.example.myapplication.ui
-
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,8 +5,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupMenu
+import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,13 +14,13 @@ import com.example.myapplication.LoginActivity
 import com.example.myapplication.MainActivity
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
-import com.example.myapplication.model.Recipe
 import com.example.myapplication.model.RecipeModel
+import com.example.myapplication.ui.ProfileFragment
 import com.google.firebase.auth.FirebaseAuth
 
 class RecipesListFragment : Fragment() {
 
-    private var recipes: MutableList<Recipe>? = null
+    private lateinit var adapter: RecipeAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,23 +28,20 @@ class RecipesListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_recipes_list, container, false)
 
-        // Fetch recipes from the model
-        recipes = RecipeModel.shared.recipes
-
         // Set up RecyclerView
         val recyclerView: RecyclerView = view.findViewById(R.id.recipes_list_activity_recycler_view)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Set up the adapter
-        val adapter = RecipeAdapter(recipes)
+        // Initialize the adapter with RecipeModel's recipes
+        adapter = RecipeAdapter(RecipeModel.shared.recipes)
         recyclerView.adapter = adapter
 
         // Set up Toolbar
-        val toolbar: Toolbar = view.findViewById(R.id.toolbar_recipes_list)
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        (activity as AppCompatActivity).supportActionBar?.title = "ReciAppes"
+//        val toolbar: Toolbar = view.findViewById(R.id.toolbar_recipes_list)
+//        (activity as AppCompatActivity).setSupportActionBar(toolbar)
+//        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
+//        (activity as AppCompatActivity).supportActionBar?.title = "ReciAppes"
 
         // Add profile icon
         val profileIcon: ImageView = view.findViewById(R.id.profile_icon)
@@ -55,6 +50,13 @@ class RecipesListFragment : Fragment() {
         }
 
         return view
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // Notify adapter when data changes
+        adapter.notifyDataSetChanged()
     }
 
     // Show Popup Menu for Profile

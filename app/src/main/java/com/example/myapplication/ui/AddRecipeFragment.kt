@@ -1,7 +1,9 @@
 package com.example.myapplication.ui
 
+import StepsAdapter
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.model.Recipe
-import com.example.myapplication.model.RecipeModel
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class AddRecipeFragment : Fragment() {
 
@@ -95,23 +99,74 @@ class AddRecipeFragment : Fragment() {
         saveRecipeButton.setOnClickListener {
             val title = recipeTitleInput.text.toString()
             val ingredients = ingredientsAdapter.getItems()
-//            val steps = stepsAdapter.getItems()
+            val steps = stepsAdapter.getItems().filter { it.isNotBlank() }  // Filter out empty steps
 
             if (title.isBlank()) {
                 Toast.makeText(requireContext(), "Please enter a recipe title", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-//            val newRecipe = Recipe(
-//                title = title,
-//                ingredients = ingredients,
-//                steps = steps,
-//                photoUri = selectedPhotoUri
-//            )
+            // Combine the steps into one string separated by new lines for the description
+            val description = steps.joinToString(separator = "\n")
 
-//            RecipeModel.shared.addRecipe(newRecipe)
-            Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
-            requireActivity().supportFragmentManager.popBackStack()
+            // Log the description to verify
+            Log.d("AddRecipeFragment", "Description: $description")
+
+            // Upload the selected image to Firebase Storage if available
+            if (selectedPhotoUri != null) {
+                val storageReference = FirebaseStorage.getInstance().reference
+                    .child("recipes_images/${UUID.randomUUID()}.jpg")
+
+                val uploadTask = storageReference.putFile(selectedPhotoUri!!)
+                uploadTask.addOnSuccessListener {
+                    // Get the download URL of the image after successful upload
+                    storageReference.downloadUrl.addOnSuccessListener { uri ->
+                        val imageUrl = uri.toString()  // Firebase URL
+
+                        // Create the Recipe object
+                        val newRecipe = Recipe(
+                            name = title,
+                            description = description,
+                            rating = 4.0f,  // Default rating
+                            imageUrl = imageUrl  // Use the download URL
+                        )
+
+                        // Save the recipe to Firestore
+                        val db = FirebaseFirestore.getInstance()
+                        db.collection("recipes")
+                            .add(newRecipe)
+                            .addOnSuccessListener { documentReference ->
+                                Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
+                                requireActivity().supportFragmentManager.popBackStack()  // Close the fragment
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(requireContext(), "Error saving recipe: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // If no image is selected, save the recipe without an image URL
+                val newRecipe = Recipe(
+                    name = title,
+                    description = description,
+                    rating = 4.0f,  // Default rating
+                    imageUrl = ""  // No image URL
+                )
+
+                // Save the recipe to Firestore
+                val db = FirebaseFirestore.getInstance()
+                db.collection("recipes")
+                    .add(newRecipe)
+                    .addOnSuccessListener { documentReference ->
+                        Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
+                        requireActivity().supportFragmentManager.popBackStack()  // Close the fragment
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(requireContext(), "Error saving recipe: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
         }
     }
 }
