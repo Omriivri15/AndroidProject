@@ -14,7 +14,9 @@ import com.example.myapplication.MainActivity
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
+import com.example.myapplication.ui.AddRecipeFragment
 import com.example.myapplication.ui.ProfileFragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -45,9 +47,16 @@ class RecipesListFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
         (activity as AppCompatActivity).supportActionBar?.title = "ReciAppes"
 
+        // Set up Profile Icon click listener
         val profileIcon: ImageView = view.findViewById(R.id.profile_icon)
         profileIcon.setOnClickListener {
             showProfileMenu(it)
+        }
+
+        // Set up Floating Action Button (FAB) to navigate to AddRecipeFragment
+        val fab: FloatingActionButton = view.findViewById(R.id.fab_add_recipe)
+        fab.setOnClickListener {
+            displayFragment(AddRecipeFragment())
         }
 
         // Fetch recipes from Firestore
@@ -122,5 +131,10 @@ class RecipesListFragment : Fragment() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
         startActivity(intent)
         requireActivity().finish()
+    }
+
+    private fun displayFragment(fragment: Fragment) {
+        // Replacing current fragment with the specified fragment
+        (activity as? MainActivity)?.displayFragment(fragment)
     }
 }

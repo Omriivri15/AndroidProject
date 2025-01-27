@@ -31,11 +31,7 @@ class MainActivity : AppCompatActivity() {
             displayFragment(RecipesListFragment())
         }
 
-        // Set up the FAB to navigate to AddRecipeFragment
-        val fab: FloatingActionButton = findViewById(R.id.fab_add_recipe)
-        fab.setOnClickListener {
-            displayFragment(AddRecipeFragment())
-        }
+
     }
 
     // Function to display a fragment
