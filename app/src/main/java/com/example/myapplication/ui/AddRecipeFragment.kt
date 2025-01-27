@@ -4,6 +4,7 @@ import android.Manifest
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,10 +23,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
-import com.example.myapplication.ui.IngredientsAdapter
-import com.example.myapplication.ui.StepsAdapter
+import com.example.myapplication.model.Recipe
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import android.content.pm.PackageManager
+import java.util.UUID
 
 class AddRecipeFragment : Fragment() {
 
@@ -33,9 +35,9 @@ class AddRecipeFragment : Fragment() {
     private lateinit var ingredientsRecyclerView: RecyclerView
     private lateinit var stepsRecyclerView: RecyclerView
     private lateinit var saveRecipeButton: Button
+    private lateinit var photoImageView: ImageView
     private lateinit var ingredientsAdapter: IngredientsAdapter
     private lateinit var stepsAdapter: StepsAdapter
-    private lateinit var photoImageView: ImageView  // ImageView for displaying selected/captured photo
     private var selectedPhotoUri: Uri? = null
     private var cameraPhotoUri: Uri? = null
 
@@ -43,7 +45,7 @@ class AddRecipeFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
                 selectedPhotoUri = it
-                photoImageView.setImageURI(it)  // Display the selected photo
+                photoImageView.setImageURI(it)
                 Toast.makeText(requireContext(), "Photo selected from gallery", Toast.LENGTH_SHORT)
                     .show()
             }
@@ -53,7 +55,7 @@ class AddRecipeFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success) {
                 selectedPhotoUri = cameraPhotoUri
-                photoImageView.setImageURI(cameraPhotoUri)  // Display the captured photo
+                photoImageView.setImageURI(cameraPhotoUri)
                 Toast.makeText(requireContext(), "Photo captured", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Camera action canceled", Toast.LENGTH_SHORT)
@@ -67,7 +69,7 @@ class AddRecipeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_add_recipe, container, false)
 
-        photoImageView = view.findViewById(R.id.photo_image_view)  // Initialize ImageView
+        photoImageView = view.findViewById(R.id.photo_image_view)
 
         return view
     }
@@ -118,15 +120,14 @@ class AddRecipeFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Set listener for the image view (to allow selecting or capturing a photo)
         photoImageView.setOnClickListener {
             showPhotoOptionDialog()
         }
 
-        // Set listener for saving the recipe
         saveRecipeButton.setOnClickListener {
             val title = recipeTitleInput.text.toString()
             val ingredients = ingredientsAdapter.getItems()
+            val steps = stepsAdapter.getItems().filter { it.isNotBlank() }
 
             if (title.isBlank()) {
                 Toast.makeText(requireContext(), "Please enter a recipe title", Toast.LENGTH_SHORT)
@@ -134,14 +135,13 @@ class AddRecipeFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // Display the photo that was selected or captured
-            selectedPhotoUri?.let {
-                photoImageView.setImageURI(it)
-            }
+            val description = steps.joinToString(separator = "\n")
 
-            Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT)
-                .show()
-            requireActivity().supportFragmentManager.popBackStack()
+            if (selectedPhotoUri != null) {
+                uploadImageAndSaveRecipe(title, description, ingredients)
+            } else {
+                saveRecipeToFirestore(title, description, "")
+            }
         }
     }
 
@@ -201,8 +201,62 @@ class AddRecipeFragment : Fragment() {
     }
 
     private fun createImageFile(): File {
-        // Create an image file in the app's cache directory
         return File.createTempFile("photo_", ".jpg", requireContext().cacheDir)
+    }
+
+    private fun uploadImageAndSaveRecipe(title: String, description: String, ingredients: List<String>) {
+        try {
+            val storageReference = FirebaseStorage.getInstance().reference
+                .child("recipes_images/${UUID.randomUUID()}.jpg")
+            val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
+
+            if (inputStream == null) {
+                Log.e("AddRecipeFragment", "InputStream is null for URI: $selectedPhotoUri")
+                Toast.makeText(requireContext(), "Failed to resolve image URI", Toast.LENGTH_SHORT).show()
+                return
+            } else {
+                Log.d("AddRecipeFragment", "InputStream opened successfully for URI: $selectedPhotoUri")
+            }
+
+            val uploadTask = storageReference.putStream(inputStream)
+            uploadTask.addOnSuccessListener {
+                storageReference.downloadUrl.addOnSuccessListener { uri ->
+                    val imageUrl = uri.toString()
+                    saveRecipeToFirestore(title, description, imageUrl)
+                }.addOnFailureListener { e ->
+                    Log.e("AddRecipeFragment", "Failed to get download URL: ${e.message}")
+                    Toast.makeText(requireContext(), "Failed to get image URL", Toast.LENGTH_SHORT).show()
+                }
+            }.addOnFailureListener { e ->
+                Log.e("AddRecipeFragment", "Image upload failed: ${e.message}")
+                Log.d("AddRecipeFragment", "Selected photo URI: $selectedPhotoUri")
+                Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("AddRecipeFragment", "Error opening InputStream: ${e.message}")
+            Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String) {
+        val newRecipe = Recipe(
+            name = title,
+            description = description,
+            rating = 4.0f,
+            imageUrl = imageUrl
+        )
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("recipes")
+            .add(newRecipe)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+            .addOnFailureListener { e ->
+                Log.e("AddRecipeFragment", "Error saving recipe: ${e.message}")
+                Toast.makeText(requireContext(), "Error saving recipe", Toast.LENGTH_SHORT).show()
+            }
     }
 
     companion object {

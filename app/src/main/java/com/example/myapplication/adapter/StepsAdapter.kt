@@ -1,5 +1,3 @@
-package com.example.myapplication.ui
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,11 +21,17 @@ class StepsAdapter(private val steps: MutableList<String>) :
 
     override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
         holder.stepInput.setText(steps[position])
+
         holder.stepInput.doAfterTextChanged { text ->
-            // אם מדובר בשדה האחרון והטקסט לא ריק, נוסיף שדה חדש
-            if (position == steps.size - 1 && text?.isNotEmpty() == true) {
-                steps.add("") // הוספת שדה ריק
+            // If the last step is not empty, add a new step
+            if (position == steps.size - 1 && !text.isNullOrEmpty()) {
+                steps.add("")
                 notifyItemInserted(steps.size - 1)
+            }
+
+            // Update the step list with the current text
+            if (text != null) {
+                steps[position] = text.toString()  // Update the current step text
             }
         }
     }
@@ -35,7 +39,12 @@ class StepsAdapter(private val steps: MutableList<String>) :
     override fun getItemCount(): Int = steps.size
 
     fun addStep() {
-        steps.add("") // הוספת שדה ריק כשלב חדש
+        steps.add("")
         notifyItemInserted(steps.size - 1)
+    }
+
+    // This function returns the list of steps
+    fun getItems(): List<String> {
+        return steps
     }
 }

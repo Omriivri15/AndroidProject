@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.gms.google-services") // Add this plugin for Firebase
+    id("com.google.gms.google-services") // Firebase plugin
 }
 
 android {
@@ -32,6 +32,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
@@ -43,6 +44,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.database.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -53,13 +55,15 @@ dependencies {
     // Firebase platform for managing versions
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 
-    implementation("com.google.firebase:firebase-storage-ktx")
-
-
-    // Firebase services
+    // Firebase dependencies
+    implementation("com.google.firebase:firebase-storage-ktx") // Firebase Storage
+    implementation("com.google.firebase:firebase-firestore-ktx") // Firestore
     implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
-    implementation("com.google.firebase:firebase-database-ktx") // Firebase Realtime Database (optional)
-    implementation("com.google.firebase:firebase-firestore-ktx") // Firestore (optional)
 
+    // Picasso for image loading
     implementation ("com.squareup.picasso:picasso:2.71828")
+
+    // Glide for image loading
+    implementation ("com.github.bumptech.glide:glide:4.13.2") // Glide dependency
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.13.2") // Glide annotation processor
 }
