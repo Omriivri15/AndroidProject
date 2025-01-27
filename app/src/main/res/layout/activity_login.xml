@@ -45,8 +45,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:boxStrokeColor="#C84B31"
-                app:hintTextColor="#C84B31"
+                app:boxStrokeColor="@color/primary_red"
+                app:hintTextColor="@color/primary_red"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -61,8 +61,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                app:boxStrokeColor="#C84B31"
-                app:hintTextColor="#C84B31"
+                app:boxStrokeColor="@color/primary_red"
+                app:hintTextColor="@color/primary_red"
                 app:passwordToggleEnabled="true"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -83,7 +83,7 @@
                 android:padding="12dp"
                 android:textSize="16sp"
                 app:cornerRadius="8dp"
-                android:backgroundTint="#C84B31"/>
+                android:backgroundTint="@color/primary_red"/>
 
             <TextView
                 android:id="@+id/switchToRegister"
