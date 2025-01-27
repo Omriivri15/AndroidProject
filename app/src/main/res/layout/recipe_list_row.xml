@@ -3,13 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp"
+    android:background="@android:color/white"
+    android:layout_margin="8dp"
+    android:radius="8dp"
+    android:elevation="4dp">
 
     <ImageView
         android:id="@+id/recipe_image_view"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="12dp" />
 
     <TextView
         android:id="@+id/recipe_name_text_view"
@@ -17,19 +22,28 @@
         android:layout_height="wrap_content"
         android:text="Recipe Name"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:paddingTop="8dp" />
+        android:textColor="@color/black"
+        android:layout_marginBottom="4dp"
+        android:paddingTop="8dp"
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/recipe_description_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Description"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="8dp"
         android:paddingTop="4dp" />
 
     <RatingBar
         android:id="@+id/recipe_rating_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:numStars="5"
+        android:progressTint="@color/primary_red"
         android:rating="4.0"
-        android:paddingTop="8dp" />
+        android:stepSize="0.5" />
+
 </LinearLayout>
