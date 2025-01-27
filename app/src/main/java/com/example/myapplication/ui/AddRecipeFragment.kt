@@ -73,6 +73,7 @@ class AddRecipeFragment : Fragment() {
 
         photoImageView = view.findViewById(R.id.photo_image_view)
 
+
         return view
     }
 
