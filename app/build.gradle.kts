@@ -49,6 +49,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    implementation ("com.cloudinary:cloudinary-android:2.0.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation ("com.github.bumptech.glide:glide:4.12.0")  // גרסה עדכנית
+
+
+
     implementation ("androidx.activity:activity-ktx:1.7.2") // Use the latest version
     implementation ("androidx.fragment:fragment-ktx:1.5.7") // Required for fragments
 

@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Exclude Cloudinary config file with sensitive information
+**/CloudinaryConfig.kt

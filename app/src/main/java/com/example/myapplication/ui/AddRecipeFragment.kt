@@ -26,10 +26,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.model.Recipe
+import com.example.myapplication.data.remote.CloudinaryModel // הוספנו את המודול של Cloudinary
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.*
+
 
 class AddRecipeFragment : Fragment() {
 
@@ -72,7 +74,6 @@ class AddRecipeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_add_recipe, container, false)
 
         photoImageView = view.findViewById(R.id.photo_image_view)
-
 
         return view
     }
@@ -208,36 +209,31 @@ class AddRecipeFragment : Fragment() {
     }
 
     private fun uploadImageAndSaveRecipe(title: String, description: String, ingredients: List<String>) {
-        try {
-            val storageReference = FirebaseStorage.getInstance().reference
-                .child("recipes_images/${UUID.randomUUID()}.jpg")
-            val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
+        // הפעלת קורוטינה
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // מעלה את התמונה ל-Cloudinary
+                val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedPhotoUri)
+                val folderName = "recipes_images"  // יכול לשנות את שם התיקייה אם רוצים
+                val imageName = "${UUID.randomUUID()}.jpg"
 
-            if (inputStream == null) {
-                Log.e("AddRecipeFragment", "InputStream is null for URI: $selectedPhotoUri")
-                Toast.makeText(requireContext(), "Failed to resolve image URI", Toast.LENGTH_SHORT).show()
-                return
-            } else {
-                Log.d("AddRecipeFragment", "InputStream opened successfully for URI: $selectedPhotoUri")
+                // קריאה ל-CloudinaryModel להעלות את התמונה
+                CloudinaryModel.uploadImage(
+                    bitmap,
+                    imageName,
+                    folderName,
+                    onSuccess = { imageUrl ->
+                        saveRecipeToFirestore(title, description, imageUrl)
+                    },
+                    onError = { error ->
+                        Log.e("AddRecipeFragment", "Image upload failed: $error")
+                        Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("AddRecipeFragment", "Error during image upload: ${e.message}")
+                Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
             }
-
-            val uploadTask = storageReference.putStream(inputStream)
-            uploadTask.addOnSuccessListener {
-                storageReference.downloadUrl.addOnSuccessListener { uri ->
-                    val imageUrl = uri.toString()
-                    saveRecipeToFirestore(title, description, imageUrl)
-                }.addOnFailureListener { e ->
-                    Log.e("AddRecipeFragment", "Failed to get download URL: ${e.message}")
-                    Toast.makeText(requireContext(), "Failed to get image URL", Toast.LENGTH_SHORT).show()
-                }
-            }.addOnFailureListener { e ->
-                Log.e("AddRecipeFragment", "Image upload failed: ${e.message}")
-                Log.d("AddRecipeFragment", "Selected photo URI: $selectedPhotoUri")
-                Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Log.e("AddRecipeFragment", "Error opening InputStream: ${e.message}")
-            Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
         }
     }
 
