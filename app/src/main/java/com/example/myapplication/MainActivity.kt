@@ -5,36 +5,49 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.example.myapplication.data.config.CloudinaryConfig
+import com.example.myapplication.data.remote.CloudinaryModel
+import com.example.myapplication.data.remote.FirebaseAuthManager
 import com.example.myapplication.ui.AddRecipeFragment
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var firebaseAuth: FirebaseAuth
     private var inDisplayFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        firebaseAuth = FirebaseAuth.getInstance()
+        // אתחול Firebase
+        val firebaseAuth = FirebaseAuthManager
 
-        // Check if the user is logged in; if not, redirect to LoginActivity
-        if (firebaseAuth.currentUser == null) {
+        // בדיקה אם המשתמש מחובר, אם לא - מעבר למסך ההתחברות
+        if (firebaseAuth.getCurrentUser() == null) {
             navigateToLoginActivity()
             return
         }
 
         setContentView(R.layout.activity_main)
 
-        // Display the recipe feed as the default fragment
+        // אתחול Cloudinary עם המפתחות מקובץ הקונפיגורציה
+        initCloudinary()
+
+        // הצגת רשימת המתכונים כברירת מחדל
         if (savedInstanceState == null) {
             displayFragment(RecipesListFragment())
         }
-
-
     }
 
-    // Function to display a fragment
+    // אתחול Cloudinary מאובטח
+    private fun initCloudinary() {
+        CloudinaryModel.init(
+            this,
+            CloudinaryConfig.CLOUD_NAME,
+            CloudinaryConfig.API_KEY,
+            CloudinaryConfig.API_SECRET
+        )
+    }
+
+    // פונקציה להחלפת פרגמנט
     fun displayFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.main_activity_frame_layout, fragment)
@@ -44,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         inDisplayFragment = fragment
     }
 
-    // Navigate to LoginActivity if the user is not logged in
+    // מעבר למסך ההתחברות אם המשתמש לא מחובר
     private fun navigateToLoginActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
