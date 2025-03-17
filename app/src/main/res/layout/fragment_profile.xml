@@ -16,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
+            android:background="#C84B31"
             app:title="My Profile"
             app:titleTextColor="@color/black"/>
     </com.google.android.material.appbar.AppBarLayout>
@@ -57,7 +57,9 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                app:boxStrokeColor="@color/primary_red"
+                app:hintTextColor="@color/primary_red">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_name_edit_text"
