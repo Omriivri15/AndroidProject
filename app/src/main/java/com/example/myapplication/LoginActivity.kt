@@ -9,10 +9,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var firebaseAuth: FirebaseAuth
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,7 +22,7 @@ class LoginActivity : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
 
-        // Check if the user is already logged in
+        // בדיקה אם המשתמש מחובר
         if (firebaseAuth.currentUser != null) {
             navigateToMainActivity()
         }
@@ -39,58 +41,83 @@ class LoginActivity : AppCompatActivity() {
         val loginPassword = findViewById<EditText>(R.id.passwordEditText)
         val registerEmail = findViewById<EditText>(R.id.registerEmailEditText)
         val registerPassword = findViewById<EditText>(R.id.registerPasswordEditText)
+        val registerFullName = findViewById<EditText>(R.id.fullNameEditText)
 
-        // Switch to Register View
+        // מעבר למסך הרשמה
         switchToRegister.setOnClickListener {
             loginView.visibility = View.GONE
             registerView.visibility = View.VISIBLE
         }
 
-        // Switch to Login View
+        // מעבר למסך התחברות
         switchToLogin.setOnClickListener {
             loginView.visibility = View.VISIBLE
             registerView.visibility = View.GONE
         }
 
-        // Login Button Logic
+        // התחברות
         loginButton.setOnClickListener {
-            val email = loginEmail.text.toString()
-            val password = loginPassword.text.toString()
+            val email = loginEmail.text.toString().trim()
+            val password = loginPassword.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                firebaseAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
-                            navigateToMainActivity()
-                        } else {
-                            Toast.makeText(this, "Login Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            } else {
+            if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            firebaseAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
+                        navigateToMainActivity()
+                    } else {
+                        Toast.makeText(this, "Login Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
 
-        // Register Button Logic
+        // **הרשמה ושמירה במסד הנתונים**
         registerButton.setOnClickListener {
-            val email = registerEmail.text.toString()
-            val password = registerPassword.text.toString()
+            val fullName = registerFullName.text.toString().trim()
+            val email = registerEmail.text.toString().trim()
+            val password = registerPassword.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                firebaseAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
-                            loginView.visibility = View.VISIBLE
-                            registerView.visibility = View.GONE
-                        } else {
-                            Toast.makeText(this, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            } else {
+            if (fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val userId = firebaseAuth.currentUser?.uid
+
+                        if (userId == null) {
+                            Toast.makeText(this, "Error: User ID is null!", Toast.LENGTH_SHORT).show()
+                            return@addOnCompleteListener
+                        }
+
+                        val user = hashMapOf(
+                            "userId" to userId,
+                            "fullName" to fullName,
+                            "email" to email,
+                            "timestamp" to System.currentTimeMillis()
+                        )
+
+                        firestore.collection("users").document(userId)
+                            .set(user)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
+                                navigateToMainActivity()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+
+                    } else {
+                        Toast.makeText(this, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
     }
 
