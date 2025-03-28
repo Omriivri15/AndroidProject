@@ -1,6 +1,9 @@
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -15,6 +18,7 @@ import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
 import com.example.myapplication.ui.AddRecipeFragment
+import com.example.myapplication.ui.MapFragment
 import com.example.myapplication.ui.ProfileFragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
@@ -25,6 +29,12 @@ class RecipesListFragment : Fragment() {
 
     private lateinit var adapter: RecipeAdapter
     private var recipesList: MutableList<Recipe> = mutableListOf()  // Store the fetched recipes
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -137,4 +147,25 @@ class RecipesListFragment : Fragment() {
         // Replacing current fragment with the specified fragment
         (activity as? MainActivity)?.displayFragment(fragment)
     }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_recipes_toolbar, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun openMapFragment() {
+        (activity as? MainActivity)?.displayFragment(MapFragment())
+    }
+
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_open_map -> {
+                openMapFragment()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
 }

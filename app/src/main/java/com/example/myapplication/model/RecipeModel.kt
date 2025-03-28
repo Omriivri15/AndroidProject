@@ -2,6 +2,8 @@ package com.example.myapplication.model
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 class RecipeModel private constructor() {
     val recipes: MutableList<Recipe> = ArrayList()
@@ -45,9 +47,16 @@ class RecipeModel private constructor() {
     }
 }
 
+
+
+@Parcelize
 data class Recipe(
     val name: String = "",
     val description: String = "",
     val rating: Float = 0.0f,
-    var imageUrl: String = ""
-)
+    var imageUrl: String = "",
+    var latitude: Double? = null,
+    var longitude: Double? = null
+) : Parcelable
+
+

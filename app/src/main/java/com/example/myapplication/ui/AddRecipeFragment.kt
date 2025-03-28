@@ -2,6 +2,7 @@ package com.example.myapplication.ui
 
 import StepsAdapter
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -31,6 +32,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import android.location.Location
+
 
 
 class AddRecipeFragment : Fragment() {
@@ -44,6 +49,9 @@ class AddRecipeFragment : Fragment() {
     private lateinit var stepsAdapter: StepsAdapter
     private var selectedPhotoUri: Uri? = null
     private var cameraPhotoUri: Uri? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentLocation: Location? = null
+
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -78,6 +86,50 @@ class AddRecipeFragment : Fragment() {
         return view
     }
 
+    @SuppressLint("MissingPermission")
+    private fun getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                101
+            )
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                currentLocation = location
+            }
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                101
+            )
+            return
+        }
+
+    }
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -85,6 +137,10 @@ class AddRecipeFragment : Fragment() {
         initializeViews(view)
         setupAdapters()
         setupListeners()
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        getLastKnownLocation()
+
     }
 
     private fun setupToolbar(view: View) {
@@ -132,6 +188,7 @@ class AddRecipeFragment : Fragment() {
             val title = recipeTitleInput.text.toString()
             val ingredients = ingredientsAdapter.getItems()
             val steps = stepsAdapter.getItems().filter { it.isNotBlank() }
+
 
             if (title.isBlank()) {
                 Toast.makeText(requireContext(), "Please enter a recipe title", Toast.LENGTH_SHORT)
@@ -238,11 +295,16 @@ class AddRecipeFragment : Fragment() {
     }
 
     private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String) {
+        val latitude = currentLocation?.latitude
+        val longitude = currentLocation?.longitude
+
         val newRecipe = Recipe(
             name = title,
             description = description,
             rating = 4.0f,
-            imageUrl = imageUrl
+            imageUrl = imageUrl,
+            latitude = latitude,
+            longitude = longitude
         )
 
         val db = FirebaseFirestore.getInstance()
@@ -257,6 +319,7 @@ class AddRecipeFragment : Fragment() {
                 Toast.makeText(requireContext(), "Error saving recipe", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     companion object {
         const val CAMERA_PERMISSION_CODE = 1001

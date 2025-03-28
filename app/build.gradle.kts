@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services") // Firebase plugin
+    id("kotlin-parcelize")
+
 }
 
 android {
@@ -45,6 +47,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -53,6 +57,9 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation ("com.github.bumptech.glide:glide:4.12.0")  // גרסה עדכנית
 
+
+    implementation ("com.google.firebase:firebase-auth:21.0.1")
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
 
     implementation ("androidx.activity:activity-ktx:1.7.2") // Use the latest version
