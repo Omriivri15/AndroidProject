@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.myapplication">
 
-    <!-- Permissions for Camera and File Writing -->
+    <!-- הרשאות כלליות -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -12,9 +12,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-
-
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -23,8 +21,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
 
-        <!-- Login Activity is the launcher activity -->
-        <activity android:name=".LoginActivity"
+        <!-- 🔑 מפתח ה־Google Maps -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <!-- 🗂️ FileProvider (לשמירת תמונות מקומית) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.myapplication.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- 🚪 מסך פתיחה -->
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,27 +47,8 @@
             </intent-filter>
         </activity>
 
-
-        <!-- Main Activity -->
+        <!-- 🏠 מסך ראשי -->
         <activity android:name=".MainActivity" />
-
-        <!-- FileProvider Configuration -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.myapplication.fileprovider"
-        android:exported="false"
-        android:grantUriPermissions="true">
-        <meta-data
-            android:name="android.support.FILE_PROVIDER_PATHS"
-            android:resource="@xml/file_paths" />
-    </provider>
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
-
-
     </application>
 
 </manifest>
