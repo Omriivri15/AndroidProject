@@ -88,5 +88,5 @@ dependencies {
 
     // Glide for image loading
     implementation ("com.github.bumptech.glide:glide:4.13.2") // Glide dependency
-    annotationProcessor ("com.github.bumptech.glide:compiler:4.13.2") // Glide annotation processor
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.13.2") // Glide annotation processor
 }

@@ -33,7 +33,8 @@ class ProfileFragment : Fragment() {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
-    private val storageRef = FirebaseStorage.getInstance().reference.child("profile_photos")
+    val storage = FirebaseStorage.getInstance()
+    val storageRef = storage.reference
 
     private var selectedPhotoUri: Uri? = null
 
@@ -127,6 +128,7 @@ class ProfileFragment : Fragment() {
                 recipeList.clear()
                 for (doc in snapshot.documents) {
                     val recipe = doc.toObject(Recipe::class.java)
+                    recipe?.id = doc.id // ← זה השינוי החשוב
                     recipe?.let { recipeList.add(it) }
                 }
                 recipeAdapter.notifyDataSetChanged()
@@ -135,6 +137,7 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), "Failed to load recipes", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun saveUserInfo() {
         val userId = firebaseAuth.currentUser?.uid ?: return
@@ -154,21 +157,42 @@ class ProfileFragment : Fragment() {
         saveButton.isEnabled = false
         saveButton.text = "Saving..."
 
-        selectedPhotoUri?.let { uri ->
-            val photoRef = storageRef.child("$userId.jpg")
-            photoRef.putFile(uri).addOnSuccessListener {
-                photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    userUpdates["photoUrl"] = downloadUrl.toString()
-                    updateUserInFirestore(userId, userUpdates)
-                }
-            }.addOnFailureListener {
-                Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
+        val uri = selectedPhotoUri
+
+        if (uri != null) {
+            try {
+                // מוודא שהתמונה זמינה לקריאה
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
+                inputStream?.close()
+
+                val photoRef = FirebaseStorage.getInstance()
+                    .reference
+                    .child("profile_photos/$userId.jpg")
+
+                photoRef.putFile(uri)
+                    .addOnSuccessListener {
+                        photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                            userUpdates["photoUrl"] = downloadUrl.toString()
+                            updateUserInFirestore(userId, userUpdates)
+                        }.addOnFailureListener { err ->
+                            Toast.makeText(requireContext(), "Failed to get download URL: ${err.message}", Toast.LENGTH_SHORT).show()
+                            resetSaveButton()
+                        }
+                    }
+                    .addOnFailureListener { err ->
+                        Toast.makeText(requireContext(), "Failed to upload photo: ${err.message}", Toast.LENGTH_SHORT).show()
+                        resetSaveButton()
+                    }
+
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Failed to access image: ${e.message}", Toast.LENGTH_LONG).show()
                 resetSaveButton()
             }
-        } ?: run {
+        } else {
             updateUserInFirestore(userId, userUpdates)
         }
     }
+
 
     private fun updateUserInFirestore(userId: String, updates: Map<String, Any>) {
         firestore.collection("users").document(userId)

@@ -3,6 +3,7 @@ package com.example.myapplication.model
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import android.os.Parcelable
+import com.google.firebase.firestore.Exclude
 import kotlinx.parcelize.Parcelize
 
 class RecipeModel private constructor() {
@@ -51,14 +52,16 @@ class RecipeModel private constructor() {
 
 @Parcelize
 data class Recipe(
-    var id: String = "",  // הוספת שדה id
-    var name: String = "",
-    var description: String = "",
-    var rating: Float = 0.0f,
+    val name: String = "",
+    val description: String = "",
+    val rating: Float = 0.0f,
     var imageUrl: String = "",
     var latitude: Double? = null,
     var longitude: Double? = null,
-    var ownerId: String = ""
+    val ownerId: String = "",
+    var id: String = "",
+    var ingredients: List<String>? = null
 ) : Parcelable
+
 
 

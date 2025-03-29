@@ -54,6 +54,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         db.collection("recipes").get().addOnSuccessListener { documents ->
             for (document in documents) {
                 val recipe = document.toObject(Recipe::class.java)
+                recipe?.id = document.id
                 val lat = recipe.latitude
                 val lng = recipe.longitude
 
