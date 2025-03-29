@@ -2,26 +2,19 @@ package com.example.myapplication.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.view.*
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
 import com.google.firebase.auth.FirebaseAuth
-
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
@@ -44,26 +37,6 @@ class ProfileFragment : Fragment() {
 
     private var selectedPhotoUri: Uri? = null
 
-    private fun loadUserRecipes() {
-        val userId = firebaseAuth.currentUser?.uid ?: return
-
-        FirebaseFirestore.getInstance().collection("recipes")
-            .whereEqualTo("ownerId", userId)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                recipeList.clear()
-                for (doc in snapshot.documents) {
-                    val recipe = doc.toObject(Recipe::class.java)
-                    recipe?.let { recipeList.add(it) }
-                }
-                recipeAdapter.notifyDataSetChanged()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Failed to load recipes", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -82,21 +55,18 @@ class ProfileFragment : Fragment() {
         uploadPhotoButton = view.findViewById(R.id.upload_photo_button)
         saveButton = view.findViewById(R.id.save_button)
 
-        loadUserInfo()
-
-        uploadPhotoButton.setOnClickListener {
-            imagePickerLauncher.launch("image/*")
-        }
-
-
         recipesRecyclerView = view.findViewById(R.id.user_recipes_recycler_view)
         recipesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         recipeAdapter = RecipeAdapter(recipeList, firebaseAuth.currentUser?.uid ?: "")
         recipesRecyclerView.adapter = recipeAdapter
 
+        loadUserInfo()
         loadUserRecipes()
 
-        // Save user info logic
+        uploadPhotoButton.setOnClickListener {
+            imagePickerLauncher.launch("image/*")
+        }
+
         saveButton.setOnClickListener {
             saveUserInfo()
         }
@@ -118,8 +88,9 @@ class ProfileFragment : Fragment() {
                 setDisplayHomeAsUpEnabled(true)
             }
         }
+
         toolbar.setNavigationOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            findNavController().navigateUp() // ← עדכון חשוב!
         }
     }
 
@@ -143,6 +114,25 @@ class ProfileFragment : Fragment() {
             }
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to load user info", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun loadUserRecipes() {
+        val userId = firebaseAuth.currentUser?.uid ?: return
+
+        firestore.collection("recipes")
+            .whereEqualTo("ownerId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                recipeList.clear()
+                for (doc in snapshot.documents) {
+                    val recipe = doc.toObject(Recipe::class.java)
+                    recipe?.let { recipeList.add(it) }
+                }
+                recipeAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to load recipes", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -182,7 +172,7 @@ class ProfileFragment : Fragment() {
 
     private fun updateUserInFirestore(userId: String, updates: Map<String, Any>) {
         firestore.collection("users").document(userId)
-            .set(updates, SetOptions.merge()) // merge - כדי לא לדרוס נתונים קיימים
+            .set(updates, SetOptions.merge())
             .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
                 resetSaveButton()
