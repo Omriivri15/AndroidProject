@@ -2,9 +2,7 @@ package com.example.myapplication.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
@@ -27,7 +25,7 @@ class RecipesListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
+        setHasOptionsMenu(true)  // מאפשר הצגת תפריט בפעולה
     }
 
     override fun onCreateView(
@@ -36,30 +34,27 @@ class RecipesListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_recipes_list, container, false)
 
-        // Initialize the adapter with the current user ID
-        adapter = RecipeAdapter(recipesList, FirebaseAuth.getInstance().currentUser?.uid ?: "")
-
-        // RecyclerView setup
+        // RecyclerView
         val recyclerView: RecyclerView = view.findViewById(R.id.recipes_list_activity_recycler_view)
-        recyclerView.setHasFixedSize(true)
+        adapter = RecipeAdapter(recipesList, FirebaseAuth.getInstance().currentUser?.uid ?: "")
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        // Toolbar setup
+        // Toolbar
         val toolbar: androidx.appcompat.widget.Toolbar = view.findViewById(R.id.toolbar_recipes_list)
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
         (activity as AppCompatActivity).supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(false)
             title = "ReciAppes"
+            setDisplayHomeAsUpEnabled(false)
         }
 
-        // Profile icon
+        // פרופיל
         val profileIcon: ImageView = view.findViewById(R.id.profile_icon)
         profileIcon.setOnClickListener {
             showProfileMenu(it)
         }
 
-        // FAB to navigate to AddRecipeFragment
+        // כפתור הוספת מתכון
         val fab: FloatingActionButton = view.findViewById(R.id.fab_add_recipe)
         fab.setOnClickListener {
             findNavController().navigate(R.id.action_recipesListFragment_to_addRecipeFragment)
@@ -74,21 +69,33 @@ class RecipesListFragment : Fragment() {
         adapter.notifyDataSetChanged()
     }
 
+    // תפריט עליון
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_recipes_toolbar, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_open_map -> {
+                findNavController().navigate(R.id.action_recipesListFragment_to_mapFragment)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun fetchRecipes() {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("recipes").get()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    recipesList.clear()
-                    task.result?.let { documents ->
-                        for (document in documents) {
-                            val recipe = document.toObject(Recipe::class.java)
-                            recipe.id = document.id
-                            recipesList.add(recipe)
-                        }
-                        adapter.notifyDataSetChanged()
-                    }
+        FirebaseFirestore.getInstance().collection("recipes")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                recipesList.clear()
+                snapshot?.forEach { doc ->
+                    val recipe = doc.toObject(Recipe::class.java)
+                    recipe.id = doc.id
+                    recipesList.add(recipe)
                 }
+                adapter.notifyDataSetChanged()
             }
     }
 
@@ -99,7 +106,6 @@ class RecipesListFragment : Fragment() {
         popupMenu.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_profile -> {
-                    // Navigate to ProfileFragment
                     findNavController().navigate(R.id.action_recipesListFragment_to_profileFragment)
                     true
                 }
@@ -110,6 +116,7 @@ class RecipesListFragment : Fragment() {
                 else -> false
             }
         }
+
         popupMenu.show()
     }
 

@@ -3,11 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services") // Firebase plugin
     id("kotlin-parcelize")
-
 }
-
-val MAPS_API_KEY: String = project.findProperty("MAPS_API_KEY") as? String ?: ""
-
 
 android {
     namespace = "com.example.myapplication"
@@ -21,9 +17,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        resValue("string", "google_maps_key", MAPS_API_KEY)
-
+        // ✅ הסרנו את resValue("string", "google_maps_key", ...)
     }
 
     buildTypes {
@@ -59,34 +53,26 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation ("com.cloudinary:cloudinary-android:2.0.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
-    implementation ("com.github.bumptech.glide:glide:4.12.0")  // גרסה עדכנית
+    implementation("com.cloudinary:cloudinary-android:2.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation("com.github.bumptech.glide:glide:4.12.0")
 
+    implementation("com.google.firebase:firebase-auth:21.0.1")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
-    implementation ("com.google.firebase:firebase-auth:21.0.1")
-    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("androidx.activity:activity-ktx:1.7.2")
+    implementation("androidx.fragment:fragment-ktx:1.5.7")
 
-
-    implementation ("androidx.activity:activity-ktx:1.7.2") // Use the latest version
-    implementation ("androidx.fragment:fragment-ktx:1.5.7") // Required for fragments
-
-    // Firebase platform for managing versions
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
-
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
-    // Firebase dependencies
-    implementation("com.google.firebase:firebase-storage-ktx") // Firebase Storage
-    implementation("com.google.firebase:firebase-firestore-ktx") // Firestore
-    implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
+    implementation("com.squareup.picasso:picasso:2.71828")
 
-    // Picasso for image loading
-    implementation ("com.squareup.picasso:picasso:2.71828")
-
-    // Glide for image loading
-    implementation ("com.github.bumptech.glide:glide:4.13.2") // Glide dependency
-    annotationProcessor ("com.github.bumptech.glide:compiler:4.13.2") // Glide annotation processor
+    implementation("com.github.bumptech.glide:glide:4.13.2")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.13.2")
 }
