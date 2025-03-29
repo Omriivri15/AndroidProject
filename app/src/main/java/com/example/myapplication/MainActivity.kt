@@ -1,6 +1,6 @@
 package com.example.myapplication
 
-import RecipesListFragment
+import com.example.myapplication.ui.RecipesListFragment  // שים לב לייבוא הנכון
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

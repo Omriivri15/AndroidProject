@@ -13,7 +13,7 @@
         android:elevation="4dp"
         app:navigationIcon="@drawable/ic_arrow_back"
         app:navigationIconTint="@android:color/white"
-        app:title="Add Recipe"
+        app:title="Edit Recipe"
         app:titleTextColor="@android:color/white"
         app:contentInsetStartWithNavigation="0dp"
         android:layout_gravity="top" />
@@ -109,7 +109,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add a photo"
+                android:text="Change Photo"
                 android:textSize="18sp"
                 android:textColor="@color/black"
                 android:layout_marginBottom="8dp"/>
@@ -129,14 +129,13 @@
                 android:id="@+id/save_recipe_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Save Recipe"
+                android:text="Save Changes"
                 android:textAllCaps="false"
                 android:padding="12dp"
                 android:textSize="16sp"
                 app:cornerRadius="8dp"
                 android:backgroundTint="@color/primary_red"/>
         </LinearLayout>
-
 
     </ScrollView>
 
