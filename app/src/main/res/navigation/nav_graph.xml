@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/recipesListFragment">
+
+    <fragment
+        android:id="@+id/recipesListFragment"
+        android:name="com.example.myapplication.ui.RecipesListFragment"
+        android:label="Recipes">
+        <action
+            android:id="@+id/action_recipesListFragment_to_addRecipeFragment"
+            app:destination="@id/addRecipeFragment" />
+        <action
+            android:id="@+id/action_recipesListFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_recipesListFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addRecipeFragment"
+        android:name="com.example.myapplication.ui.AddRecipeFragment"
+        android:label="Add Recipe" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.myapplication.ui.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.example.myapplication.ui.MapFragment"
+        android:label="Map">
+        <action
+            android:id="@+id/action_mapFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recipeDetailsFragment"
+        android:name="com.example.myapplication.ui.RecipeDetailsFragment"
+        android:label="Recipe Details">
+        <argument
+            android:name="recipe"
+            app:argType="com.example.myapplication.model.Recipe" />
+    </fragment>
+
+</navigation>

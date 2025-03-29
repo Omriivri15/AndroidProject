@@ -4,17 +4,13 @@ import StepsAdapter
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
+import android.view.*
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -23,20 +19,19 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.data.remote.CloudinaryModel
 import com.example.myapplication.model.Recipe
-import com.example.myapplication.data.remote.CloudinaryModel // הוספנו את המודול של Cloudinary
-import com.google.firebase.firestore.FirebaseFirestore
-import java.io.File
-import java.util.UUID
-import kotlinx.coroutines.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import android.location.Location
 import com.google.firebase.auth.FirebaseAuth
-
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.*
+import java.io.File
+import java.util.*
 
 class AddRecipeFragment : Fragment() {
 
@@ -52,95 +47,27 @@ class AddRecipeFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
 
-
-    private val galleryLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                selectedPhotoUri = it
-                photoImageView.setImageURI(it)
-                Toast.makeText(requireContext(), "Photo selected from gallery", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-            if (success) {
-                selectedPhotoUri = cameraPhotoUri
-                photoImageView.setImageURI(cameraPhotoUri)
-                Toast.makeText(requireContext(), "Photo captured", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Camera action canceled", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
+    companion object {
+        const val CAMERA_PERMISSION_CODE = 1001
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_add_recipe, container, false)
-
-        photoImageView = view.findViewById(R.id.photo_image_view)
-
-        return view
+        return inflater.inflate(R.layout.fragment_add_recipe, container, false)
     }
-
-    @SuppressLint("MissingPermission")
-    private fun getLastKnownLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                101
-            )
-            return
-        }
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                currentLocation = location
-            }
-        }
-
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                101
-            )
-            return
-        }
-
-    }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         setupToolbar(view)
         initializeViews(view)
         setupAdapters()
         setupListeners()
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         getLastKnownLocation()
-
     }
 
     private fun setupToolbar(view: View) {
@@ -153,7 +80,7 @@ class AddRecipeFragment : Fragment() {
             }
         }
         toolbar.setNavigationOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            findNavController().navigateUp()
         }
     }
 
@@ -162,6 +89,7 @@ class AddRecipeFragment : Fragment() {
         ingredientsRecyclerView = view.findViewById(R.id.ingredients_recycler_view)
         stepsRecyclerView = view.findViewById(R.id.steps_recycler_view)
         saveRecipeButton = view.findViewById(R.id.save_recipe_button)
+        photoImageView = view.findViewById(R.id.photo_image_view)
     }
 
     private fun setupAdapters() {
@@ -189,10 +117,8 @@ class AddRecipeFragment : Fragment() {
             val ingredients = ingredientsAdapter.getItems()
             val steps = stepsAdapter.getItems().filter { it.isNotBlank() }
 
-
             if (title.isBlank()) {
-                Toast.makeText(requireContext(), "Please enter a recipe title", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Please enter a recipe title", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -219,45 +145,39 @@ class AddRecipeFragment : Fragment() {
             .show()
     }
 
+    private val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                selectedPhotoUri = it
+                photoImageView.setImageURI(it)
+                Toast.makeText(requireContext(), "Photo selected from gallery", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                selectedPhotoUri = cameraPhotoUri
+                photoImageView.setImageURI(cameraPhotoUri)
+                Toast.makeText(requireContext(), "Photo captured", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Camera action canceled", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     private fun checkAndRequestCameraPermission() {
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.CAMERA),
-                CAMERA_PERMISSION_CODE
-            )
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE)
         } else {
             capturePhotoFromCamera()
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CAMERA_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                capturePhotoFromCamera()
-            } else {
-                Toast.makeText(requireContext(), "Camera permission denied", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-    }
-
     private fun capturePhotoFromCamera() {
         val photoFile = createImageFile()
-        cameraPhotoUri = FileProvider.getUriForFile(
-            requireContext(),
-            "com.example.myapplication.fileprovider",
-            photoFile
-        )
+        cameraPhotoUri = FileProvider.getUriForFile(requireContext(), "com.example.myapplication.fileprovider", photoFile)
         cameraLauncher.launch(cameraPhotoUri)
     }
 
@@ -265,16 +185,25 @@ class AddRecipeFragment : Fragment() {
         return File.createTempFile("photo_", ".jpg", requireContext().cacheDir)
     }
 
+    @SuppressLint("MissingPermission")
+    private fun getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 101)
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            currentLocation = location
+        }
+    }
+
     private fun uploadImageAndSaveRecipe(title: String, description: String, ingredients: List<String>) {
-        // הפעלת קורוטינה
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // מעלה את התמונה ל-Cloudinary
                 val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedPhotoUri)
-                val folderName = "recipes_images"  // יכול לשנות את שם התיקייה אם רוצים
+                val folderName = "recipes_images"
                 val imageName = "${UUID.randomUUID()}.jpg"
 
-                // קריאה ל-CloudinaryModel להעלות את התמונה
                 CloudinaryModel.uploadImage(
                     bitmap,
                     imageName,
@@ -299,7 +228,6 @@ class AddRecipeFragment : Fragment() {
         val longitude = currentLocation?.longitude
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-
         val newRecipe = Recipe(
             name = title,
             description = description,
@@ -310,21 +238,15 @@ class AddRecipeFragment : Fragment() {
             ownerId = currentUserId
         )
 
-        val db = FirebaseFirestore.getInstance()
-        db.collection("recipes")
+        FirebaseFirestore.getInstance().collection("recipes")
             .add(newRecipe)
             .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
-                requireActivity().supportFragmentManager.popBackStack()
+                findNavController().navigateUp()
             }
             .addOnFailureListener { e ->
                 Log.e("AddRecipeFragment", "Error saving recipe: ${e.message}")
                 Toast.makeText(requireContext(), "Error saving recipe", Toast.LENGTH_SHORT).show()
             }
-    }
-
-
-    companion object {
-        const val CAMERA_PERMISSION_CODE = 1001
     }
 }

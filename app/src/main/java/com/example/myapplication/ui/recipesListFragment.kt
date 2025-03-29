@@ -9,10 +9,10 @@ import android.widget.ImageView
 import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.LoginActivity
-import com.example.myapplication.MainActivity
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
@@ -23,7 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class RecipesListFragment : Fragment() {
 
     private lateinit var adapter: RecipeAdapter
-    private var recipesList: MutableList<Recipe> = mutableListOf()  // Store the fetched recipes
+    private var recipesList: MutableList<Recipe> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,86 +36,74 @@ class RecipesListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_recipes_list, container, false)
 
-        // Initialize the adapter with an empty list and current user ID
+        // Initialize the adapter with the current user ID
         adapter = RecipeAdapter(recipesList, FirebaseAuth.getInstance().currentUser?.uid ?: "")
 
-        // Set up RecyclerView
+        // RecyclerView setup
         val recyclerView: RecyclerView = view.findViewById(R.id.recipes_list_activity_recycler_view)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        // Set up Toolbar
+        // Toolbar setup
         val toolbar: androidx.appcompat.widget.Toolbar = view.findViewById(R.id.toolbar_recipes_list)
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        (activity as AppCompatActivity).supportActionBar?.title = "ReciAppes"
+        (activity as AppCompatActivity).supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(false)
+            title = "ReciAppes"
+        }
 
-        // Set up Profile Icon click listener
+        // Profile icon
         val profileIcon: ImageView = view.findViewById(R.id.profile_icon)
         profileIcon.setOnClickListener {
             showProfileMenu(it)
         }
 
-        // Set up Floating Action Button (FAB) to navigate to AddRecipeFragment
+        // FAB to navigate to AddRecipeFragment
         val fab: FloatingActionButton = view.findViewById(R.id.fab_add_recipe)
         fab.setOnClickListener {
-            val addRecipeFragment = AddRecipeFragment()
-            (activity as? MainActivity)?.displayFragment(addRecipeFragment)
+            findNavController().navigate(R.id.action_recipesListFragment_to_addRecipeFragment)
         }
 
-        // Fetch recipes from Firestore
         fetchRecipes()
-
         return view
     }
 
     override fun onStart() {
         super.onStart()
-        // Notify adapter when data changes
         adapter.notifyDataSetChanged()
     }
 
-    // Fetch recipes from Firestore
     private fun fetchRecipes() {
         val db = FirebaseFirestore.getInstance()
-        val recipesCollection = db.collection("recipes")
-
-        recipesCollection.get()
+        db.collection("recipes").get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val documents = task.result
                     recipesList.clear()
-                    if (documents != null) {
+                    task.result?.let { documents ->
                         for (document in documents) {
                             val recipe = document.toObject(Recipe::class.java)
-                            recipe.id = document.id  // Save document ID
+                            recipe.id = document.id
                             recipesList.add(recipe)
                         }
                         adapter.notifyDataSetChanged()
                     }
-                } else {
-                    // Handle failure
                 }
             }
     }
 
-
-    // Show Popup Menu for Profile
     private fun showProfileMenu(anchor: View) {
         val popupMenu = PopupMenu(requireContext(), anchor)
         popupMenu.menuInflater.inflate(R.menu.menu_profile, popupMenu.menu)
 
-        // Handle menu item clicks
         popupMenu.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_profile -> {
                     // Navigate to ProfileFragment
-                    navigateToProfile()
+                    findNavController().navigate(R.id.action_recipesListFragment_to_profileFragment)
                     true
                 }
                 R.id.action_logout -> {
-                    // Perform Logout
                     logoutUser()
                     true
                 }
@@ -125,17 +113,10 @@ class RecipesListFragment : Fragment() {
         popupMenu.show()
     }
 
-    private fun navigateToProfile() {
-        // Use MainActivity's displayFragment to navigate
-        (activity as? MainActivity)?.displayFragment(ProfileFragment())
-    }
-
     private fun logoutUser() {
-        // Logout via Firebase
         FirebaseAuth.getInstance().signOut()
-
         val intent = Intent(requireContext(), LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         requireActivity().finish()
     }
