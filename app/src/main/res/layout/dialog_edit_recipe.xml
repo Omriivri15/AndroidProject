@@ -1,0 +1,53 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="16dp"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Recipe Title Label -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recipe Name"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/edit_title_input"
+        android:hint="Enter recipe title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Ingredients Label -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ingredients"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/edit_ingredients_input"
+        android:hint="Enter ingredients"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Steps Label -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Steps"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/edit_description_input"
+        android:hint="Enter steps or instructions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.myapplication.model.Recipe
 import com.example.myapplication.R
+import com.example.myapplication.ui.EditRecipeDialogFragment
 //import com.example.myapplication.ui.EditRecipeFragment
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -72,10 +73,17 @@ class RecipeAdapter(private val recipes: MutableList<Recipe>, private val curren
     }
 
     private fun onEditRecipe(recipe: Recipe, itemView: View) {
-//        val editRecipeFragment = EditRecipeFragment.newInstance(recipe)
-//        (itemView.context as? AppCompatActivity)?.supportFragmentManager?.beginTransaction()
-//            ?.replace(R.id.main_activity_frame_layout, editRecipeFragment)
-//            ?.addToBackStack(null)
-//            ?.commit()
+        val fragmentManager = (itemView.context as? AppCompatActivity)?.supportFragmentManager
+        fragmentManager?.let {
+            val dialog = EditRecipeDialogFragment(recipe) { updatedRecipe ->
+                val index = recipes.indexOfFirst { it.id == updatedRecipe.id }
+                if (index != -1) {
+                    recipes[index] = updatedRecipe
+                    notifyItemChanged(index)
+                }
+            }
+            dialog.show(it, "EditRecipeDialog")
+        }
     }
+
 }
