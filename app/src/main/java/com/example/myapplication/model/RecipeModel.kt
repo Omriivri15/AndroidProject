@@ -51,9 +51,10 @@ class RecipeModel private constructor() {
 
 @Parcelize
 data class Recipe(
-    val name: String = "",
-    val description: String = "",
-    val rating: Float = 0.0f,
+    var id: String = "",  // הוספת שדה id
+    var name: String = "",
+    var description: String = "",
+    var rating: Float = 0.0f,
     var imageUrl: String = "",
     var latitude: Double? = null,
     var longitude: Double? = null,

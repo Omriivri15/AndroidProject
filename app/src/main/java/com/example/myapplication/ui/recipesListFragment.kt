@@ -1,9 +1,8 @@
+package com.example.myapplication.ui
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -17,13 +16,9 @@ import com.example.myapplication.MainActivity
 import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
-import com.example.myapplication.ui.AddRecipeFragment
-import com.example.myapplication.ui.MapFragment
-import com.example.myapplication.ui.ProfileFragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 
 class RecipesListFragment : Fragment() {
 
@@ -35,15 +30,14 @@ class RecipesListFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_recipes_list, container, false)
 
-        // Initialize the adapter with an empty list
-        adapter = RecipeAdapter(recipesList)
+        // Initialize the adapter with an empty list and current user ID
+        adapter = RecipeAdapter(recipesList, FirebaseAuth.getInstance().currentUser?.uid ?: "")
 
         // Set up RecyclerView
         val recyclerView: RecyclerView = view.findViewById(R.id.recipes_list_activity_recycler_view)
@@ -66,7 +60,8 @@ class RecipesListFragment : Fragment() {
         // Set up Floating Action Button (FAB) to navigate to AddRecipeFragment
         val fab: FloatingActionButton = view.findViewById(R.id.fab_add_recipe)
         fab.setOnClickListener {
-            displayFragment(AddRecipeFragment())
+            val addRecipeFragment = AddRecipeFragment()
+            (activity as? MainActivity)?.displayFragment(addRecipeFragment)
         }
 
         // Fetch recipes from Firestore
@@ -84,25 +79,27 @@ class RecipesListFragment : Fragment() {
     // Fetch recipes from Firestore
     private fun fetchRecipes() {
         val db = FirebaseFirestore.getInstance()
-        val recipesCollection = db.collection("recipes")  // Assuming 'recipes' is the collection name
+        val recipesCollection = db.collection("recipes")
 
         recipesCollection.get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val documents = task.result
-                    recipesList.clear()  // Clear existing list
+                    recipesList.clear()
                     if (documents != null) {
                         for (document in documents) {
                             val recipe = document.toObject(Recipe::class.java)
-                            recipesList.add(recipe)  // Add new recipe to list
+                            recipe.id = document.id  // Save document ID
+                            recipesList.add(recipe)
                         }
-                        adapter.notifyDataSetChanged()  // Notify adapter about data change
+                        adapter.notifyDataSetChanged()
                     }
                 } else {
-                    // Handle failure (e.g., show error message)
+                    // Handle failure
                 }
             }
     }
+
 
     // Show Popup Menu for Profile
     private fun showProfileMenu(anchor: View) {
@@ -142,30 +139,4 @@ class RecipesListFragment : Fragment() {
         startActivity(intent)
         requireActivity().finish()
     }
-
-    private fun displayFragment(fragment: Fragment) {
-        // Replacing current fragment with the specified fragment
-        (activity as? MainActivity)?.displayFragment(fragment)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_recipes_toolbar, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    private fun openMapFragment() {
-        (activity as? MainActivity)?.displayFragment(MapFragment())
-    }
-
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_open_map -> {
-                openMapFragment()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
 }

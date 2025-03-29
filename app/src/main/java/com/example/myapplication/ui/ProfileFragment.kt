@@ -91,7 +91,7 @@ class ProfileFragment : Fragment() {
 
         recipesRecyclerView = view.findViewById(R.id.user_recipes_recycler_view)
         recipesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recipeAdapter = RecipeAdapter(recipeList)
+        recipeAdapter = RecipeAdapter(recipeList, firebaseAuth.currentUser?.uid ?: "")
         recipesRecyclerView.adapter = recipeAdapter
 
         loadUserRecipes()
