@@ -14,8 +14,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.adapter.RecipeAdapter
+import com.example.myapplication.model.Recipe
 import com.google.firebase.auth.FirebaseAuth
+
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
@@ -28,12 +35,35 @@ class ProfileFragment : Fragment() {
     private lateinit var editNameEditText: EditText
     private lateinit var uploadPhotoButton: Button
     private lateinit var saveButton: Button
+    private lateinit var recipesRecyclerView: RecyclerView
+    private lateinit var recipeAdapter: RecipeAdapter
+    private val recipeList = mutableListOf<Recipe>()
 
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val storageRef = FirebaseStorage.getInstance().reference.child("profile_photos")
 
     private var selectedPhotoUri: Uri? = null
+
+    private fun loadUserRecipes() {
+        val userId = firebaseAuth.currentUser?.uid ?: return
+
+        FirebaseFirestore.getInstance().collection("recipes")
+            .whereEqualTo("ownerId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                recipeList.clear()
+                for (doc in snapshot.documents) {
+                    val recipe = doc.toObject(Recipe::class.java)
+                    recipe?.let { recipeList.add(it) }
+                }
+                recipeAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to load recipes", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,6 +89,15 @@ class ProfileFragment : Fragment() {
             imagePickerLauncher.launch("image/*")
         }
 
+
+        recipesRecyclerView = view.findViewById(R.id.user_recipes_recycler_view)
+        recipesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recipeAdapter = RecipeAdapter(recipeList)
+        recipesRecyclerView.adapter = recipeAdapter
+
+        loadUserRecipes()
+
+        // Save user info logic
         saveButton.setOnClickListener {
             saveUserInfo()
         }

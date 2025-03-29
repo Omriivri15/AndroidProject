@@ -35,7 +35,7 @@ import kotlinx.coroutines.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import android.location.Location
-
+import com.google.firebase.auth.FirebaseAuth
 
 
 class AddRecipeFragment : Fragment() {
@@ -297,6 +297,8 @@ class AddRecipeFragment : Fragment() {
     private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String) {
         val latitude = currentLocation?.latitude
         val longitude = currentLocation?.longitude
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
 
         val newRecipe = Recipe(
             name = title,
@@ -304,7 +306,8 @@ class AddRecipeFragment : Fragment() {
             rating = 4.0f,
             imageUrl = imageUrl,
             latitude = latitude,
-            longitude = longitude
+            longitude = longitude,
+            ownerId = currentUserId
         )
 
         val db = FirebaseFirestore.getInstance()

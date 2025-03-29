@@ -56,7 +56,8 @@ data class Recipe(
     val rating: Float = 0.0f,
     var imageUrl: String = "",
     var latitude: Double? = null,
-    var longitude: Double? = null
+    var longitude: Double? = null,
+    var ownerId: String = ""
 ) : Parcelable
 
 
