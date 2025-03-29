@@ -20,8 +20,11 @@ import com.example.myapplication.R
 import com.example.myapplication.adapter.RecipeAdapter
 import com.example.myapplication.model.Recipe
 import com.google.firebase.auth.FirebaseAuth
+
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 
@@ -37,7 +40,7 @@ class ProfileFragment : Fragment() {
     private val recipeList = mutableListOf<Recipe>()
 
     private val firebaseAuth = FirebaseAuth.getInstance()
-    private val databaseRef = FirebaseDatabase.getInstance().reference.child("users")
+    private val firestore = FirebaseFirestore.getInstance()
     private val storageRef = FirebaseStorage.getInstance().reference.child("profile_photos")
 
     private var selectedPhotoUri: Uri? = null
@@ -80,13 +83,12 @@ class ProfileFragment : Fragment() {
         uploadPhotoButton = view.findViewById(R.id.upload_photo_button)
         saveButton = view.findViewById(R.id.save_button)
 
-        // Load user info
         loadUserInfo()
 
-        // Upload photo logic
         uploadPhotoButton.setOnClickListener {
             imagePickerLauncher.launch("image/*")
         }
+
 
         recipesRecyclerView = view.findViewById(R.id.user_recipes_recycler_view)
         recipesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -104,10 +106,9 @@ class ProfileFragment : Fragment() {
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             selectedPhotoUri = it
-            profileImageView.setImageURI(it) // Display the selected image in the ImageView
+            profileImageView.setImageURI(it)
         }
     }
-
 
     private fun setupToolbar(view: View) {
         val toolbar: Toolbar = view.findViewById(R.id.toolbar)
@@ -126,54 +127,75 @@ class ProfileFragment : Fragment() {
     private fun loadUserInfo() {
         val userId = firebaseAuth.currentUser?.uid ?: return
 
-        // Fetch user data from Firebase Database
-        databaseRef.child(userId).get().addOnSuccessListener { snapshot ->
-            val name = snapshot.child("name").value as? String
-            val photoUrl = snapshot.child("photoUrl").value as? String
+        firestore.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val name = document.getString("fullName") ?: "No Name"
+                    val photoUrl = document.getString("photoUrl")
 
-            nameTextView.text = name
-            editNameEditText.setText(name)
+                    nameTextView.text = name
+                    editNameEditText.setText(name)
 
-            if (!photoUrl.isNullOrEmpty()) {
-                Picasso.get().load(photoUrl).into(profileImageView)
+                    if (!photoUrl.isNullOrEmpty()) {
+                        Picasso.get().load(photoUrl).into(profileImageView)
+                    }
+                }
             }
-        }.addOnFailureListener {
-            Toast.makeText(requireContext(), "Failed to load user info", Toast.LENGTH_SHORT).show()
-        }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to load user info", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun saveUserInfo() {
         val userId = firebaseAuth.currentUser?.uid ?: return
-        val newName = editNameEditText.text.toString()
+        val newName = editNameEditText.text.toString().trim()
 
         if (newName.isBlank()) {
             Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val userUpdates = mutableMapOf<String, Any>("name" to newName)
+        val userUpdates = hashMapOf<String, Any>(
+            "fullName" to newName,
+            "email" to (firebaseAuth.currentUser?.email ?: ""),
+            "timestamp" to System.currentTimeMillis()
+        )
 
-        // If a new photo is selected, upload it to Firebase Storage
+        saveButton.isEnabled = false
+        saveButton.text = "Saving..."
+
         selectedPhotoUri?.let { uri ->
             val photoRef = storageRef.child("$userId.jpg")
             photoRef.putFile(uri).addOnSuccessListener {
                 photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                     userUpdates["photoUrl"] = downloadUrl.toString()
-                    updateUserDatabase(userId, userUpdates)
+                    updateUserInFirestore(userId, userUpdates)
                 }
             }.addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
+                resetSaveButton()
             }
         } ?: run {
-            updateUserDatabase(userId, userUpdates)
+            updateUserInFirestore(userId, userUpdates)
         }
     }
 
-    private fun updateUserDatabase(userId: String, updates: Map<String, Any>) {
-        databaseRef.child(userId).updateChildren(updates).addOnSuccessListener {
-            Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show()
-        }.addOnFailureListener {
-            Toast.makeText(requireContext(), "Failed to update profile", Toast.LENGTH_SHORT).show()
-        }
+    private fun updateUserInFirestore(userId: String, updates: Map<String, Any>) {
+        firestore.collection("users").document(userId)
+            .set(updates, SetOptions.merge()) // merge - כדי לא לדרוס נתונים קיימים
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                resetSaveButton()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to update profile", Toast.LENGTH_SHORT).show()
+                resetSaveButton()
+            }
+    }
+
+    private fun resetSaveButton() {
+        saveButton.isEnabled = true
+        saveButton.text = "Save Changes"
     }
 }
