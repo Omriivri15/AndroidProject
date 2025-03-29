@@ -3,6 +3,9 @@ package com.example.myapplication.ui
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -138,5 +141,30 @@ class RecipesListFragment : Fragment() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
         startActivity(intent)
         requireActivity().finish()
+    }
+
+    private fun displayFragment(fragment: Fragment) {
+        // Replacing current fragment with the specified fragment
+        (activity as? MainActivity)?.displayFragment(fragment)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_recipes_toolbar, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun openMapFragment() {
+        (activity as? MainActivity)?.displayFragment(MapFragment())
+    }
+
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_open_map -> {
+                openMapFragment()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }
