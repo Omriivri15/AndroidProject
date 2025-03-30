@@ -2,6 +2,8 @@ package com.example.myapplication.ui
 
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +32,8 @@ class ProfileFragment : Fragment() {
     private lateinit var recipesRecyclerView: RecyclerView
     private lateinit var recipeAdapter: RecipeAdapter
     private val recipeList = mutableListOf<Recipe>()
+    private lateinit var loadingOverlay: View
+
 
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
@@ -55,6 +59,8 @@ class ProfileFragment : Fragment() {
         editNameEditText = view.findViewById(R.id.edit_name_edit_text)
         uploadPhotoButton = view.findViewById(R.id.upload_photo_button)
         saveButton = view.findViewById(R.id.save_button)
+        loadingOverlay = view.findViewById(R.id.loading_overlay)
+
 
         recipesRecyclerView = view.findViewById(R.id.user_recipes_recycler_view)
         recipesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -96,44 +102,54 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadUserInfo() {
+        showLoading()
         val userId = firebaseAuth.currentUser?.uid ?: return
 
         firestore.collection("users").document(userId)
             .get()
             .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val name = document.getString("fullName") ?: "No Name"
-                    val photoUrl = document.getString("photoUrl")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    hideLoading()
+                    if (document.exists()) {
+                        val name = document.getString("fullName") ?: "No Name"
+                        val photoUrl = document.getString("photoUrl")
 
-                    nameTextView.text = name
-                    editNameEditText.setText(name)
+                        nameTextView.text = name
+                        editNameEditText.setText(name)
 
-                    if (!photoUrl.isNullOrEmpty()) {
-                        Picasso.get().load(photoUrl).into(profileImageView)
+                        if (!photoUrl.isNullOrEmpty()) {
+                            Picasso.get().load(photoUrl).into(profileImageView)
+                        }
                     }
-                }
+                }, 800)
             }
             .addOnFailureListener {
+                hideLoading()
                 Toast.makeText(requireContext(), "Failed to load user info", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun loadUserRecipes() {
+        showLoading()
         val userId = firebaseAuth.currentUser?.uid ?: return
 
         firestore.collection("recipes")
             .whereEqualTo("ownerId", userId)
             .get()
             .addOnSuccessListener { snapshot ->
-                recipeList.clear()
-                for (doc in snapshot.documents) {
-                    val recipe = doc.toObject(Recipe::class.java)
-                    recipe?.id = doc.id // ← זה השינוי החשוב
-                    recipe?.let { recipeList.add(it) }
-                }
-                recipeAdapter.notifyDataSetChanged()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    hideLoading()
+                    recipeList.clear()
+                    for (doc in snapshot.documents) {
+                        val recipe = doc.toObject(Recipe::class.java)
+                        recipe?.id = doc.id // ← זה השינוי החשוב
+                        recipe?.let { recipeList.add(it) }
+                    }
+                    recipeAdapter.notifyDataSetChanged()
+                }, 800)
             }
             .addOnFailureListener {
+                hideLoading()
                 Toast.makeText(requireContext(), "Failed to load recipes", Toast.LENGTH_SHORT).show()
             }
     }
@@ -211,4 +227,13 @@ class ProfileFragment : Fragment() {
         saveButton.isEnabled = true
         saveButton.text = "Save Changes"
     }
+
+    private fun showLoading() {
+        loadingOverlay.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        loadingOverlay.visibility = View.GONE
+    }
+
 }
