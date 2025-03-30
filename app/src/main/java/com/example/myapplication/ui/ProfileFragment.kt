@@ -1,5 +1,6 @@
 package com.example.myapplication.ui
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -21,6 +22,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
+import android.provider.MediaStore
+import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+
 
 class ProfileFragment : Fragment() {
 
@@ -118,8 +126,12 @@ class ProfileFragment : Fragment() {
                         editNameEditText.setText(name)
 
                         if (!photoUrl.isNullOrEmpty()) {
-                            Picasso.get().load(photoUrl).into(profileImageView)
+                            Picasso.get()
+                                .load(photoUrl)
+                                .memoryPolicy(com.squareup.picasso.MemoryPolicy.NO_CACHE, com.squareup.picasso.MemoryPolicy.NO_STORE)
+                                .into(profileImageView)
                         }
+
                     }
                 }, 800)
             }
@@ -176,33 +188,29 @@ class ProfileFragment : Fragment() {
         val uri = selectedPhotoUri
 
         if (uri != null) {
-            try {
-                // מוודא שהתמונה זמינה לקריאה
-                val inputStream = requireContext().contentResolver.openInputStream(uri)
-                inputStream?.close()
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                    val folderName = "profile_photos"
+                    val imageName = "$userId.jpg"
 
-                val photoRef = FirebaseStorage.getInstance()
-                    .reference
-                    .child("profile_photos/$userId.jpg")
-
-                photoRef.putFile(uri)
-                    .addOnSuccessListener {
-                        photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                            userUpdates["photoUrl"] = downloadUrl.toString()
+                    com.example.myapplication.data.remote.CloudinaryModel.uploadImage(
+                        bitmap,
+                        imageName,
+                        folderName,
+                        onSuccess = { imageUrl ->
+                            userUpdates["photoUrl"] = imageUrl
                             updateUserInFirestore(userId, userUpdates)
-                        }.addOnFailureListener { err ->
-                            Toast.makeText(requireContext(), "Failed to get download URL: ${err.message}", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { error ->
+                            Toast.makeText(requireContext(), "Failed to upload photo: $error", Toast.LENGTH_SHORT).show()
                             resetSaveButton()
                         }
-                    }
-                    .addOnFailureListener { err ->
-                        Toast.makeText(requireContext(), "Failed to upload photo: ${err.message}", Toast.LENGTH_SHORT).show()
-                        resetSaveButton()
-                    }
-
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Failed to access image: ${e.message}", Toast.LENGTH_LONG).show()
-                resetSaveButton()
+                    )
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Failed to process image: ${e.message}", Toast.LENGTH_SHORT).show()
+                    resetSaveButton()
+                }
             }
         } else {
             updateUserInFirestore(userId, userUpdates)
@@ -210,13 +218,18 @@ class ProfileFragment : Fragment() {
     }
 
 
+
+
+
     private fun updateUserInFirestore(userId: String, updates: Map<String, Any>) {
         firestore.collection("users").document(userId)
             .set(updates, SetOptions.merge())
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                resetSaveButton()
-            }
+            Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+            loadUserInfo() // ← זה יטען מחדש את התמונה והשם המעודכנים
+            resetSaveButton()
+        }
+
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to update profile", Toast.LENGTH_SHORT).show()
                 resetSaveButton()
