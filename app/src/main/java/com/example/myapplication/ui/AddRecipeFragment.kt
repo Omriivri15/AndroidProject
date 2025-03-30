@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.*
@@ -46,6 +48,8 @@ class AddRecipeFragment : Fragment() {
     private var cameraPhotoUri: Uri? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
+    private lateinit var loadingOverlay: View
+
 
     companion object {
         const val CAMERA_PERMISSION_CODE = 1001
@@ -68,6 +72,7 @@ class AddRecipeFragment : Fragment() {
         setupAdapters()
         setupListeners()
         getLastKnownLocation()
+        loadingOverlay = view.findViewById(R.id.loading_overlay)
     }
 
     private fun setupToolbar(view: View) {
@@ -224,6 +229,7 @@ class AddRecipeFragment : Fragment() {
     }
 
     private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String) {
+        showLoading()
         val latitude = currentLocation?.latitude
         val longitude = currentLocation?.longitude
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -241,12 +247,26 @@ class AddRecipeFragment : Fragment() {
         FirebaseFirestore.getInstance().collection("recipes")
             .add(newRecipe)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Recipe saved successfully", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    hideLoading()
+                    Toast.makeText(context, "Recipe saved!", Toast.LENGTH_SHORT).show()
+                    findNavController().navigateUp()
+                }, 1000) // עיכוב של 1 שנייה
             }
+
             .addOnFailureListener { e ->
+                hideLoading()
                 Log.e("AddRecipeFragment", "Error saving recipe: ${e.message}")
                 Toast.makeText(requireContext(), "Error saving recipe", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun showLoading() {
+        loadingOverlay.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        loadingOverlay.visibility = View.GONE
+    }
+
 }
