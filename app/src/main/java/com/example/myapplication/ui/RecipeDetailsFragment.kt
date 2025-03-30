@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
@@ -33,13 +32,13 @@ class RecipeDetailsFragment : Fragment() {
 
         val nameTextView = view.findViewById<TextView>(R.id.detail_recipe_name)
         val descTextView = view.findViewById<TextView>(R.id.detail_recipe_description)
-        val ratingBar = view.findViewById<RatingBar>(R.id.detail_recipe_rating)
+        val ingredientsTextView = view.findViewById<TextView>(R.id.detail_recipe_ingredients)
         val imageView = view.findViewById<ImageView>(R.id.detail_recipe_image)
 
         recipe?.let {
             nameTextView.text = it.name
             descTextView.text = it.description
-            ratingBar.rating = it.rating
+            ingredientsTextView.text = it.ingredients?.joinToString("\n") ?: "No ingredients"
             Glide.with(requireContext()).load(it.imageUrl).into(imageView)
         }
     }

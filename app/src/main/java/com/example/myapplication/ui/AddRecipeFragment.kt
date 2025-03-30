@@ -132,7 +132,7 @@ class AddRecipeFragment : Fragment() {
             if (selectedPhotoUri != null) {
                 uploadImageAndSaveRecipe(title, description, ingredients)
             } else {
-                saveRecipeToFirestore(title, description, "")
+                saveRecipeToFirestore(title, description, imageUrl = "", ingredients = listOf<String>(""))
             }
         }
     }
@@ -214,7 +214,7 @@ class AddRecipeFragment : Fragment() {
                     imageName,
                     folderName,
                     onSuccess = { imageUrl ->
-                        saveRecipeToFirestore(title, description, imageUrl)
+                        saveRecipeToFirestore(title, description, imageUrl, ingredients)
                     },
                     onError = { error ->
                         Log.e("AddRecipeFragment", "Image upload failed: $error")
@@ -228,7 +228,7 @@ class AddRecipeFragment : Fragment() {
         }
     }
 
-    private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String) {
+    private fun saveRecipeToFirestore(title: String, description: String, imageUrl: String, ingredients: List<String>) {
         showLoading()
         val latitude = currentLocation?.latitude
         val longitude = currentLocation?.longitude
@@ -241,8 +241,10 @@ class AddRecipeFragment : Fragment() {
             imageUrl = imageUrl,
             latitude = latitude,
             longitude = longitude,
-            ownerId = currentUserId
+            ownerId = currentUserId,
+            ingredients = ingredients
         )
+
 
         FirebaseFirestore.getInstance().collection("recipes")
             .add(newRecipe)

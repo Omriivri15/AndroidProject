@@ -20,7 +20,7 @@ class RecipeAdapter(private val recipes: MutableList<Recipe>, private val curren
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nameTextView: TextView = itemView.findViewById(R.id.recipe_name_text_view)
         private val descriptionTextView: TextView = itemView.findViewById(R.id.recipe_description_text_view)
-        private val ratingBar: RatingBar = itemView.findViewById(R.id.recipe_rating_bar)
+        private val ingredientsTextView: TextView = itemView.findViewById(R.id.recipe_ingredients_text_view)
         private val recipeImageView: ImageView = itemView.findViewById(R.id.recipe_image_view)
         private val editButton: View = itemView.findViewById(R.id.edit_button)
         private val deleteButton: View = itemView.findViewById(R.id.delete_button)
@@ -28,9 +28,8 @@ class RecipeAdapter(private val recipes: MutableList<Recipe>, private val curren
         fun bind(recipe: Recipe, currentUserId: String, onDelete: (Recipe) -> Unit, onEdit: (Recipe, View) -> Unit) {
             nameTextView.text = recipe.name
             descriptionTextView.text = recipe.description
-            ratingBar.rating = recipe.rating
+            ingredientsTextView.text = recipe.ingredients?.joinToString("\n") { "• $it" } ?: "No ingredients"
 
-            // Show Edit and Delete buttons only if the user is the owner of the recipe
             if (recipe.ownerId == currentUserId) {
                 editButton.visibility = View.VISIBLE
                 deleteButton.visibility = View.VISIBLE
