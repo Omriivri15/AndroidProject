@@ -23,14 +23,34 @@
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
-        <RatingBar
-            android:id="@+id/detail_recipe_rating"
+
+        <!-- ✅ כותרת למרכיבים -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:numStars="5"
-            android:stepSize="0.5"
-            android:layout_marginBottom="8dp"/>
+            android:text="Ingredients"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="4dp"/>
 
+        <!-- ✅ רשימת המרכיבים -->
+        <TextView
+            android:id="@+id/detail_recipe_ingredients"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- ✅ כותרת לשלבים -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Steps"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- ✅ תיאור השלבים -->
         <TextView
             android:id="@+id/detail_recipe_description"
             android:layout_width="wrap_content"

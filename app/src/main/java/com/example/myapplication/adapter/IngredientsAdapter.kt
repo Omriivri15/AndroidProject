@@ -21,16 +21,20 @@ class IngredientsAdapter : RecyclerView.Adapter<IngredientsAdapter.IngredientVie
             .inflate(R.layout.item_ingredient, parent, false)
         return IngredientViewHolder(view)
     }
-
     override fun onBindViewHolder(holder: IngredientViewHolder, position: Int) {
         holder.input.setText(ingredients[position])
+
         holder.input.doAfterTextChanged { text ->
-            if (position == ingredients.size - 1 && text?.isNotEmpty() == true) {
+            val newText = text.toString()
+            ingredients[holder.adapterPosition] = newText
+
+            if (holder.adapterPosition == ingredients.size - 1 && newText.isNotEmpty()) {
                 ingredients.add("")
                 notifyItemInserted(ingredients.size - 1)
             }
         }
     }
+
 
     override fun getItemCount(): Int = ingredients.size
 
